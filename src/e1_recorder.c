@@ -27,14 +27,14 @@ static enum osmo_e1cap_capture_mode ts2cap_mode(struct e1inp_ts *ts)
 /* receive a raw message frome the E1 timeslot */
 void e1ts_raw_recv(struct e1inp_ts *ts, struct msgb *msg)
 {
-	struct e1_recorder_line *rline = &g_recorder.line[ts->line->nr];
+	struct e1_recorder_line *rline = &g_recorder.line[ts->line->num];
 	enum osmo_e1cap_capture_mode cap_mode = ts2cap_mode(ts);
 
 	/* FIXME: special processing of TFP and PGSL */
 
 	e1frame_store(ts, msg, cap_mode);
 
-	if (rline.mirror.enabled) {
+	if (rline->mirror.enabled) {
 		/* forward data to destination line */
 	}
 }
