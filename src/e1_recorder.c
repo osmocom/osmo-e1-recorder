@@ -1,0 +1,97 @@
+#include <osmocom/core/signal.h>
+#include <osmocom/core/logging.h>
+#include <osmocom/core/application.h>
+#include <osmocom/vty/vty.h>
+#include <osmocom/vty/telnet_interface.h>
+
+#include <osmocom/abis/abis.h>
+#include <osmocom/abis/e1_input.h>
+
+#include "storage.h"
+#include "recorder.h"
+
+static enum osmo_e1cap_capture_mode ts2cap_mode(struct e1inp_ts *ts)
+{
+	switch (ts->type) {
+	case E1INP_TS_TYPE_RAW:
+		return OSMO_E1CAP_MODE_RAW;
+	case E1INP_TS_TYPE_SIGN:
+		return OSMO_E1CAP_MODE_HDLC;
+	case E1INP_TS_TYPE_TRAU:
+		return OSMO_E1CAP_MODE_TRAU;
+	default:
+		OSMO_ASSERT(0);
+	}
+}
+
+/* receive a raw message frome the E1 timeslot */
+void e1ts_raw_recv(struct e1inp_ts *ts, struct msgb *msg)
+{
+	struct e1_recorder_line *rline = &g_recorder.line[ts->line->nr];
+	enum osmo_e1cap_capture_mode cap_mode = ts2cap_mode(ts);
+
+	/* FIXME: special processing of TFP and PGSL */
+
+	e1frame_store(ts, msg, cap_mode);
+
+	if (rline.mirror.enabled) {
+		/* forward data to destination line */
+	}
+}
+
+static int inp_sig_cb(unsigned int subsys, unsigned int signal,
+		      void *handler_data, void *signal_data)
+{
+	OSMO_ASSERT(subsys == SS_L_INPUT);
+
+	/* FIXME */
+
+	return 0;
+}
+
+//	e1inp_ts_config_raw(ts, line, &e1ts_raw_recv);
+
+static const struct log_info_cat recorder_categories[] = {
+	[DMAIN] = {
+		.name = "MAIN",
+		.enabled = 1, .loglevel = LOGL_DEBUG,
+	},
+};
+static struct log_info info = {
+	.cat = recorder_categories,
+	.num_cat = ARRAY_SIZE(recorder_categories),
+};
+
+struct vty_app_info vty_info = {
+	.name = "osmo-e1-recorder",
+	.version = "0",
+	.copyright = "(C) 2016 by Harald Welte <laforge@gnumonks.org>\n",
+};
+
+static void *rec_tall_ctx;
+struct e1_recorder g_recorder;
+
+int main(int argc, char **argv)
+{
+	int rc;
+
+	rec_tall_ctx = talloc_named_const(NULL, 0, "recorder");
+
+	osmo_init_logging(&info);
+	vty_init(&vty_info);
+	osmo_signal_register_handler(SS_L_INPUT, inp_sig_cb, NULL);
+	libosmo_abis_init(rec_tall_ctx);
+	e1inp_vty_init();
+	recorder_vty_init();
+
+	rc = vty_read_config_file("osmo-e1-recorder.cfg", NULL);
+	if (rc < 0)
+		exit(1);
+
+	/* start telne tafte reading config for vty_get_bind_adr() */
+	telnet_init_dynif(rec_tall_ctx, NULL, vty_get_bind_addr(), 4444);
+
+	while (1) {
+		osmo_select_main(0);
+	};
+}
