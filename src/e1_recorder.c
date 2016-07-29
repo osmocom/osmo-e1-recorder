@@ -3,6 +3,7 @@
 #include <osmocom/core/application.h>
 #include <osmocom/vty/vty.h>
 #include <osmocom/vty/telnet_interface.h>
+#include <osmocom/vty/logging.h>
 
 #include <osmocom/abis/abis.h>
 #include <osmocom/abis/e1_input.h>
@@ -35,7 +36,15 @@ void e1ts_raw_recv(struct e1inp_ts *ts, struct msgb *msg)
 	e1frame_store(ts, msg, cap_mode);
 
 	if (rline->mirror.enabled) {
+		struct e1inp_line *other_line =
+				e1inp_line_find(rline->mirror.line_nr);
+		struct e1inp_ts *other_ts;
+		other_ts = &other_line->ts[ts->num-1];
+		if (!other_ts)
+			return;
 		/* forward data to destination line */
+		OSMO_ASSERT(other_ts->type == ts->type);
+		msgb_enqueue(&other_ts->raw.tx_queue, msg);
 	}
 }
 
@@ -49,11 +58,10 @@ static int inp_sig_cb(unsigned int subsys, unsigned int signal,
 	return 0;
 }
 
-//	e1inp_ts_config_raw(ts, line, &e1ts_raw_recv);
-
 static const struct log_info_cat recorder_categories[] = {
 	[DMAIN] = {
 		.name = "MAIN",
+		.description = "Osmocom E1 Recorder",
 		.enabled = 1, .loglevel = LOGL_DEBUG,
 	},
 };
@@ -79,6 +87,7 @@ int main(int argc, char **argv)
 
 	osmo_init_logging(&info);
 	vty_init(&vty_info);
+	logging_vty_add_cmds(&info);
 	osmo_signal_register_handler(SS_L_INPUT, inp_sig_cb, NULL);
 	libosmo_abis_init(rec_tall_ctx);
 	e1inp_vty_init();

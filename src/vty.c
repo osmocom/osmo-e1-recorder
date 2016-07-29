@@ -15,8 +15,14 @@ DEFUN(cfg_recorder, cfg_recorder_cmd,
 	return CMD_SUCCESS;
 }
 
+static const struct e1inp_line_ops dummy_e1i_line_ops = {
+	.sign_link_up = NULL,
+	.sign_link_down = NULL,
+	.sign_link = NULL,
+};
+
 DEFUN(cfg_rec_line_ts_mode, cfg_rec_line_ts_mode_cmd,
-	"line <0-255> ts <0-31> mode (none|signalling|trau|raw)",
+	"line <0-255> ts <1-31> mode (none|signalling|trau|raw)",
 	LINE_STR
 	"E1/T1 Timeslot Number\n"
 	"E1/T1 Timeslot Number\n"
@@ -46,8 +52,10 @@ DEFUN(cfg_rec_line_ts_mode, cfg_rec_line_ts_mode_cmd,
 		vty_out(vty, "Timeslot %d is too large%s", ts_nr, VTY_NEWLINE);
 		return CMD_WARNING;
 	}
-	ts = &line->ts[ts_nr];
+	ts = &line->ts[ts_nr-1];
+	e1inp_line_bind_ops(line, &dummy_e1i_line_ops);
 
+	vty_out(vty, "Line %u TS %u mode %u%s", line_nr, ts_nr, mode, VTY_NEWLINE);
 	switch (mode) {
 	case E1INP_TS_TYPE_NONE:
 		/* TOOD: have eqinp_ts_config_none ? */
@@ -58,6 +66,9 @@ DEFUN(cfg_rec_line_ts_mode, cfg_rec_line_ts_mode_cmd,
 		break;
 	case E1INP_TS_TYPE_RAW:
 		e1inp_ts_config_raw(ts, line, &e1ts_raw_recv);
+		break;
+	default:
+		vty_out(vty, "Unknown mode %u ?!?%s", mode, VTY_NEWLINE);
 		break;
 	}
 
@@ -157,6 +168,12 @@ static void config_write_recorder_line(struct vty *vty, unsigned int lnr)
 
 	for (i = 0; i < line->num_ts; i++) {
 		struct e1inp_ts *ts = &line->ts[i];
+		const char *mode_str;
+
+		mode_str = get_value_string(e1inp_ts_type_names, ts->type);
+
+		vty_out(vty, " line %u ts %u mode %s%s",
+			lnr, ts->num, mode_str, VTY_NEWLINE);
 	}
 }
 

@@ -2,6 +2,7 @@
 #include <stdbool.h>
 
 #include <osmocom/core/msgb.h>
+#include <osmocom/core/logging.h>
 #include <osmocom/vty/command.h>
 #include <osmocom/abis/e1_input.h>
 
