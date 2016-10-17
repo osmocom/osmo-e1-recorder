@@ -22,7 +22,7 @@ static const struct e1inp_line_ops dummy_e1i_line_ops = {
 };
 
 DEFUN(cfg_rec_line_ts_mode, cfg_rec_line_ts_mode_cmd,
-	"line <0-255> ts <1-31> mode (none|signalling|trau|raw)",
+	"line <0-255> ts <1-31> mode (none|hdlc|trau|raw)",
 	LINE_STR
 	"E1/T1 Timeslot Number\n"
 	"E1/T1 Timeslot Number\n"
@@ -61,8 +61,8 @@ DEFUN(cfg_rec_line_ts_mode, cfg_rec_line_ts_mode_cmd,
 		/* TOOD: have eqinp_ts_config_none ? */
 		ts->type = E1INP_TS_TYPE_NONE;
 		break;
-	case E1INP_TS_TYPE_SIGN:
-		e1inp_ts_config_sign(ts, line);
+	case E1INP_TS_TYPE_HDLC:
+		e1inp_ts_config_hdlc(ts, line, &e1ts_raw_recv);
 		break;
 	case E1INP_TS_TYPE_RAW:
 		e1inp_ts_config_raw(ts, line, &e1ts_raw_recv);

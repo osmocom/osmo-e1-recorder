@@ -16,7 +16,7 @@ static enum osmo_e1cap_capture_mode ts2cap_mode(struct e1inp_ts *ts)
 	switch (ts->type) {
 	case E1INP_TS_TYPE_RAW:
 		return OSMO_E1CAP_MODE_RAW;
-	case E1INP_TS_TYPE_SIGN:
+	case E1INP_TS_TYPE_HDLC:
 		return OSMO_E1CAP_MODE_HDLC;
 	case E1INP_TS_TYPE_TRAU:
 		return OSMO_E1CAP_MODE_TRAU;
