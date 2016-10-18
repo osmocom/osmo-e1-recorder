@@ -124,7 +124,6 @@ struct osmo_e1cap_pkthdr *osmo_e1cap_read_next(struct osmo_e1cap_file *f)
 		return NULL;
 	}
 	pkt->len = ntohl(pkt->len);
-	printf("len=%u\n", pkt->len);
 	/* read data */
 	if (pkt->len > OSMO_E1REC_ALLOC_SIZE - sizeof(*pkt)) {
 		pkt = talloc_realloc_size(f, pkt, sizeof(*pkt) + pkt->len);
