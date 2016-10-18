@@ -40,12 +40,15 @@ void e1ts_raw_recv(struct e1inp_ts *ts, struct msgb *msg)
 				e1inp_line_find(rline->mirror.line_nr);
 		struct e1inp_ts *other_ts;
 		other_ts = &other_line->ts[ts->num-1];
-		if (!other_ts)
+		if (!other_ts) {
+			msgb_free(msg);
 			return;
+		}
 		/* forward data to destination line */
 		OSMO_ASSERT(other_ts->type == ts->type);
 		msgb_enqueue(&other_ts->raw.tx_queue, msg);
-	}
+	} else
+		msgb_free(msg);
 }
 
 static int inp_sig_cb(unsigned int subsys, unsigned int signal,
