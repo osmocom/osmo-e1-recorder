@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 
 #include <osmocom/core/msgb.h>
+#include <osmocom/core/talloc.h>
 #include <osmocom/abis/e1_input.h>
 
 #include "storage.h"
@@ -83,4 +84,57 @@ int e1frame_store(struct e1inp_ts *ts, struct msgb *msg, enum osmo_e1cap_capture
 	g_written_bytes += rc;
 
 	return 0;
+}
+
+/* reading */
+
+
+struct osmo_e1cap_file {
+	int fd;
+};
+
+#define OSMO_E1REC_ALLOC_SIZE	1024
+
+struct osmo_e1cap_file *osmo_e1cap_open(void *ctx, const char *path)
+{
+	struct osmo_e1cap_file *f = talloc_zero(ctx, struct osmo_e1cap_file);
+	if (!f)
+		return NULL;
+
+	f->fd = open(path, O_RDONLY);
+	if (f->fd < 0) {
+		talloc_free(f);
+		return NULL;
+	}
+	return f;
+}
+
+struct osmo_e1cap_pkthdr *osmo_e1cap_read_next(struct osmo_e1cap_file *f)
+{
+	struct osmo_e1cap_pkthdr *pkt = talloc_zero_size(f, OSMO_E1REC_ALLOC_SIZE);
+	int rc;
+
+	if (!pkt)
+		return NULL;
+
+	/* read header */
+	rc = read(f->fd, (uint8_t *)pkt, sizeof(*pkt));
+	if (rc < sizeof(*pkt)) {
+		talloc_free(pkt);
+		return NULL;
+	}
+	pkt->len = ntohl(pkt->len);
+	printf("len=%u\n", pkt->len);
+	/* read data */
+	if (pkt->len > OSMO_E1REC_ALLOC_SIZE - sizeof(*pkt)) {
+		pkt = talloc_realloc_size(f, pkt, sizeof(*pkt) + pkt->len);
+		if (!pkt)
+			return NULL;
+	}
+	rc = read(f->fd, (uint8_t*)(pkt+1), pkt->len);
+	if (rc < pkt->len) {
+		talloc_free(pkt);
+		return NULL;
+	}
+	return pkt;
 }

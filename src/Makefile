@@ -1,9 +1,12 @@
 CFLAGS=-g -Wall
 LDFLAGS=-losmocore -losmogsm -losmovty -losmoabis -ltalloc
 
-all: osmo-e1-recorder
+all: osmo-e1-recorder osmo-e1cap-dump
 
 osmo-e1-recorder: e1_recorder.o storage.o vty.o
+	$(CC) $(LDFLAGS) -o$@ $^
+
+osmo-e1cap-dump: e1cap_dump.o storage.o
 	$(CC) $(LDFLAGS) -o$@ $^
 
 %.o: %.c
