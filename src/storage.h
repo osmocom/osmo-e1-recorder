@@ -22,6 +22,11 @@ struct osmo_e1cap_pkthdr {
 	uint8_t capture_mode;
 	/* any optional future flags */
 	uint8_t flags;
-} __attribute__((aligned));
+	uint8_t align[8];
+	uint8_t data[0];
+} __attribute__((packed));
+
+struct msgb;
+struct e1inp_ts;
 
 int e1frame_store(struct e1inp_ts *ts, struct msgb *msg, enum osmo_e1cap_capture_mode mode);
