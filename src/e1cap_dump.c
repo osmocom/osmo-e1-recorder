@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <time.h>
+
 #include <sys/time.h>
 
 #include <osmocom/core/signal.h>
@@ -9,6 +11,20 @@
 #include "recorder.h"
 
 struct e1_recorder g_recorder;
+
+static char *timeval2str(struct timeval *tv)
+{
+	time_t nowtime;
+	struct tm *nowtm;
+	char tmbuf[64];
+	static char buf[64];
+
+	nowtime = tv->tv_sec;
+	nowtm = localtime(&nowtime);
+	strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+	snprintf(buf, sizeof buf, "%s.%06ld", tmbuf, tv->tv_usec);
+	return buf;
+}
 
 int main(int argc, char **argv)
 {
@@ -26,8 +42,8 @@ int main(int argc, char **argv)
 		exit(1);
 
 	while ((pkt = osmo_e1cap_read_next(f))) {
-		printf("%lu:%lu %02u/%02u %u (%u): %s\n",
-			pkt->ts.tv_sec, pkt->ts.tv_usec,
+		printf("%s %02u/%02u %u (%u): %s\n",
+			timeval2str(&pkt->ts),
 			pkt->line_nr, pkt->ts_nr, pkt->capture_mode,
 			pkt->len,
 			osmo_hexdump_nospc(pkt->data, pkt->len));
