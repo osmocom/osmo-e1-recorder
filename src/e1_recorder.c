@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <getopt.h>
 
 #include <osmocom/core/signal.h>
 #include <osmocom/core/logging.h>
@@ -88,6 +89,7 @@ struct vty_app_info vty_info = {
 
 static void *rec_tall_ctx;
 struct e1_recorder g_recorder;
+static char *g_config_file = "osmo-e1-recorder.cfg";
 
 static void signal_handler(int signo)
 {
@@ -98,6 +100,28 @@ static void signal_handler(int signo)
 	case SIGUSR1:
 		talloc_report(rec_tall_ctx, stderr);
 		break;
+	}
+}
+
+static void handle_options(int argc, char **argv)
+{
+	while (1) {
+		int option_index = 0, c;
+		static const struct option long_options[] = {
+			{ "config-file", 1, 0, 'c' },
+			{ 0, 0, 0, 0 }
+		};
+
+		c = getopt_long(argc, argv, "c:",
+				long_options, &option_index);
+		if (c == -1)
+			break;
+
+		switch (c) {
+		case 'c':
+			g_config_file = optarg;
+			break;
+		}
 	}
 }
 
@@ -118,7 +142,9 @@ int main(int argc, char **argv)
 	signal(SIGHUP, &signal_handler);
 	signal(SIGUSR1, &signal_handler);
 
-	rc = vty_read_config_file("osmo-e1-recorder.cfg", NULL);
+	handle_options(argc, argv);
+
+	rc = vty_read_config_file(g_config_file, NULL);
 	if (rc < 0)
 		exit(1);
 
