@@ -32,10 +32,15 @@ void e1ts_raw_recv(struct e1inp_ts *ts, struct msgb *msg)
 {
 	struct e1_recorder_line *rline = &g_recorder.line[ts->line->num];
 	enum osmo_e1cap_capture_mode cap_mode = ts2cap_mode(ts);
+	int rc;
 
 	/* FIXME: special processing of TFP and PGSL */
 
-	e1frame_store(ts, msg, cap_mode);
+	rc = e1frame_store(ts, msg, cap_mode);
+	if (rc < 0) {
+		LOGP(DMAIN, LOGL_FATAL, "Error writing E1/T1 frame to disk\n");
+		exit(1);
+	}
 
 	if (rline->mirror.enabled) {
 		struct e1inp_line *other_line =

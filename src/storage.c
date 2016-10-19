@@ -83,7 +83,9 @@ int e1frame_store(struct e1inp_ts *ts, struct msgb *msg, enum osmo_e1cap_capture
 	h->capture_mode = mode;
 	h->flags = 0;
 
-	storage_reopen_if_needed();
+	rc = storage_reopen_if_needed();
+	if (rc < 0)
+		return rc;
 
 	rc = writev(g_out_fd, iov, ARRAY_SIZE(iov));
 	if (rc < 0)
