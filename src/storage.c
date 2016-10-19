@@ -27,16 +27,24 @@ static const char *storage_gen_filename(void)
 	return buf;
 }
 
+void storage_close(void)
+{
+	LOGP(DMAIN, LOGL_INFO, "Closing Log file\n");
+	close(g_out_fd);
+	g_out_fd = -1;
+}
+
 static int storage_reopen_if_needed(void)
 {
 	if (g_written_bytes / (1024*1024) >= g_recorder.max_file_size_mb) {
-		close(g_out_fd);
-		g_out_fd = -1;
+		storage_close();
+		/* we re-open below */
 	}
 
 	if (g_out_fd < 0) {
 		int rc;
 		const char *fname = storage_gen_filename();
+		LOGP(DMAIN, LOGL_INFO, "Opening Log file %s\n", fname);
 		rc = chdir(g_recorder.storage_path);
 		if (rc < 0) {
 			LOGP(DMAIN, LOGL_ERROR, "Unable to chdir(%s): %s\n",

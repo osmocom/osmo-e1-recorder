@@ -30,6 +30,7 @@ struct msgb;
 struct e1inp_ts;
 
 int e1frame_store(struct e1inp_ts *ts, struct msgb *msg, enum osmo_e1cap_capture_mode mode);
+void storage_close(void);
 
 struct osmo_e1cap_file;
 struct osmo_e1cap_file *osmo_e1cap_open(void *ctx, const char *path);

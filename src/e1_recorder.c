@@ -1,3 +1,5 @@
+#include <signal.h>
+
 #include <osmocom/core/signal.h>
 #include <osmocom/core/logging.h>
 #include <osmocom/core/application.h>
@@ -82,6 +84,18 @@ struct vty_app_info vty_info = {
 static void *rec_tall_ctx;
 struct e1_recorder g_recorder;
 
+static void signal_handler(int signo)
+{
+	switch (signo) {
+	case SIGHUP:
+		storage_close();
+		break;
+	case SIGUSR1:
+		talloc_report(rec_tall_ctx, stderr);
+		break;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -95,6 +109,9 @@ int main(int argc, char **argv)
 	libosmo_abis_init(rec_tall_ctx);
 	e1inp_vty_init();
 	recorder_vty_init();
+
+	signal(SIGHUP, &signal_handler);
+	signal(SIGUSR1, &signal_handler);
 
 	rc = vty_read_config_file("osmo-e1-recorder.cfg", NULL);
 	if (rc < 0)
