@@ -22,8 +22,11 @@ static const ubit_t five_ones[] = { 1,1,1,1,1 };
 
 static int append_bit(struct hdlc_proc *hdlc, uint8_t bit, int ignore)
 {
+	/* we always add the bit to the history */
 	memmove(hdlc->history+1, hdlc->history, sizeof(hdlc->history)-1);
 	hdlc->history[0] = bit;
+
+	/* if it is a to-be-discarded bit, we bail out */
 	if (ignore)
 		return -1;
 
@@ -51,21 +54,32 @@ static int process_hdlc_bit(struct hdlc_proc *hdlc, uint8_t bit)
 
 	switch (hdlc->state) {
 	case STATE_FLAG_WAIT_ZERO:
+		/* we've received 6 consecutive '1' just before and are
+		 * waiting for the final '0' to end the flag character */
 		if (bit == 0) {
+			/* it was a zero, flag character detected */
 			DEBUGP("F ");
 			flag = 1;
+			/* we're now inside the payload state */
 			hdlc->state = STATE_PAYLOAD;
 		} else {
+			/* if we received yet another '1', we re-start
+			 * from the beginning */
 			hdlc->state = STATE_INIT;
 		}
 		ignore = 1;
 		hdlc->num_bits = 0;
 		break;
-	default:
+	case STATE_PAYLOAD:
+	case STATE_INIT:
 		if (!memcmp(five_ones, hdlc->history, sizeof(five_ones))) {
+			/* five consecutive ones in the history */
 			if (bit == 1) {
-				//DEBUGP("F ");
+				/* one more '1' was received -> we wait
+				 * for a zero at the end of the flag
+				 * character 0x7E */
 				hdlc->state = STATE_FLAG_WAIT_ZERO;
+				/* discard bit */
 				ignore = 1;
 			} else {
 				/* discard bit */
