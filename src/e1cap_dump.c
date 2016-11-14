@@ -4,12 +4,15 @@
 #include <string.h>
 
 #include <sys/time.h>
+#include <sys/types.h>
 
 #include <osmocom/core/bits.h>
 #include <osmocom/core/signal.h>
 #include <osmocom/core/logging.h>
+#include <osmocom/core/msgb.h>
 #include <osmocom/core/application.h>
 #include <osmocom/abis/subchan_demux.h>
+#include <osmocom/abis/lapd_pcap.h>
 
 #include "storage.h"
 #include "recorder.h"
@@ -42,6 +45,8 @@ static int g_filter_line = -1;
 static int g_filter_slot = -1;
 static int g_filter_subslot = -1;
 static struct osmo_e1cap_pkthdr *g_last_pkthdr;
+static int g_pcap_fd = -1;
+struct msgb *g_pcap_msg = NULL;
 
 static char *timeval2str(struct timeval *tv)
 {
@@ -66,6 +71,20 @@ static int all_bytes_are(unsigned char ch, const uint8_t *data, int len)
 			return 0;
 	}
 	return 1;
+}
+
+static void handle_hdlc_frame_content(const uint8_t *data, unsigned int len,
+				      void *priv)
+{
+	if (g_pcap_fd && len >= 4) {
+		uint8_t *cur = msgb_put(g_pcap_msg, len-2);
+		memcpy(cur, data, len-2);
+		printf("==> %s\n", msgb_hexdump(g_pcap_msg));
+		OSMO_ASSERT(g_pcap_msg->len >= 2);
+		/* FIXME: timestamp! */
+		osmo_pcap_lapd_write(g_pcap_fd, OSMO_LAPD_PCAP_OUTPUT, g_pcap_msg);
+		msgb_reset(g_pcap_msg);
+	}
 }
 
 static void handle_sc_out(struct sc_state *scs)
@@ -180,7 +199,7 @@ static int handle_options(int argc, char **argv)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "l:s:bSu:")) != -1) {
+	while ((opt = getopt(argc, argv, "l:s:bSu:p:")) != -1) {
 		switch (opt) {
 		case 'l': /* Filter on E1 Line Number */
 			g_filter_line = atoi(optarg);
@@ -199,6 +218,14 @@ static int handle_options(int argc, char **argv)
 			if (g_filter_subslot < 0 || g_filter_subslot > 3)
 				exit(2);
 			break;
+		case 'p': /* PCAP writing */
+			g_pcap_fd = osmo_pcap_lapd_open(optarg, 0640);
+			if (g_pcap_fd < 0) {
+				perror("opening pcap file");
+				exit(1);
+			}
+			g_pcap_msg = msgb_alloc(1024, "pcap");
+			break;
 		default:
 			fprintf(stderr, "Unknown option '%c'\n", opt);
 			exit(EXIT_FAILURE);
@@ -209,18 +236,31 @@ static int handle_options(int argc, char **argv)
 	return 0;
 }
 
+static struct log_info_cat log_categories[] = {
+};
+
+static struct log_info log_info = {
+	.cat = log_categories,
+	.num_cat = ARRAY_SIZE(log_categories),
+};
+
 int main(int argc, char **argv)
 {
 	struct osmo_e1cap_file *f;
 	struct osmo_e1cap_pkthdr *pkt;
 	unsigned long num_pkt = 0;
 	struct subch_demux smux;
+	int i;
 
 	printf("sizeof(timeval) = %zu\n", sizeof(struct timeval));
 	printf("sizeof(osmo_e1cap_pkthdr) = %zu\n", sizeof(*pkt));
 
 	memset(g_sc_state, 0, sizeof(g_sc_state));
+	for (i = 0; i < ARRAY_SIZE(g_sc_state); i++)
+		g_sc_state[i].hdlc.out_cb = handle_hdlc_frame_content;
 	init_flip_bits();
+
+	osmo_init_logging(&log_info);
 
 	handle_options(argc, argv);
 
