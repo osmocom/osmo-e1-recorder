@@ -5,6 +5,7 @@
 
 #include <sys/time.h>
 
+#include <osmocom/core/bits.h>
 #include <osmocom/core/signal.h>
 #include <osmocom/core/logging.h>
 #include <osmocom/core/application.h>
@@ -12,6 +13,8 @@
 
 #include "storage.h"
 #include "recorder.h"
+#include "flip_bits.h"
+#include "hdlc.h"
 
 struct e1_recorder g_recorder;
 
@@ -28,6 +31,8 @@ enum mode {
 struct sc_state {
 	uint8_t ts_data[MAX_TS][CHUNK_BYTES];
 	uint8_t num_ts;
+	uint32_t ts_mask;
+	struct hdlc_proc hdlc;
 };
 
 static struct sc_state g_sc_state[2];
@@ -65,15 +70,21 @@ static int all_bytes_are(unsigned char ch, const uint8_t *data, int len)
 
 static void handle_sc_out(struct sc_state *scs)
 {
-	uint8_t out[scs->num_ts * CHUNK_BYTES];
+	unsigned int num_bytes = scs->num_ts * CHUNK_BYTES;
+	unsigned int num_bits = num_bytes * 8;
+	uint8_t out[32*CHUNK_BYTES];
+	ubit_t out_bits[32*CHUNK_BYTES*8];
 	int i, j, k = 0;
 
 	/* re-shuffle the data from columns to lines */
 	for (i = 0; i < CHUNK_BYTES; i++) {
-		for (j = 1; j < scs->num_ts; j++)
+		for (j = 0; j < scs->num_ts; j++)
 			out[k++] = scs->ts_data[j][i];
 	}
-	printf("%s\n", osmo_hexdump_nospc(out, scs->num_ts * CHUNK_BYTES));
+	//printf("num_bytes=%u %s\n", num_bytes, osmo_hexdump_nospc(out, num_bytes));
+	osmo_pbit2ubit_ext(out_bits, 0, out, 0, num_bits, 1);
+	//for (i = 0; i < num_bits; i++) fputc(out_bits[i] ? '1' : '.', stdout); fputc('\n', stdout);
+	process_raw_hdlc(&scs->hdlc, out_bits, num_bits);
 }
 
 static void handle_sc_in(struct osmo_e1cap_pkthdr *pkt, const uint8_t *data, unsigned int len)
@@ -96,16 +107,48 @@ static void handle_sc_in(struct osmo_e1cap_pkthdr *pkt, const uint8_t *data, uns
 		exit(1);
 	}
 
-	memcpy(scs->ts_data[pkt->ts_nr], data, len);
-	if (pkt->ts_nr-1 > scs->num_ts)
-		scs->num_ts = pkt->ts_nr-1;
-	if (pkt->ts_nr == scs->num_ts)
+	if (pkt->ts_nr == 1) {
+		scs->ts_mask = 0;
+		memset(scs->ts_data, 0, sizeof(scs->ts_data));
+	}
+
+	/* copy over the data */
+	memcpy(scs->ts_data[pkt->ts_nr-1], data, len);
+	/* note that we have valid data for the given timeslot */
+	scs->ts_mask |= (1 << (pkt->ts_nr-1));
+
+	/* make sure we know what's the maximum timeslot number */
+	if (pkt->ts_nr > scs->num_ts)
+		scs->num_ts = pkt->ts_nr;
+
+	/* check if we have data for all needed timeslots */
+	uint32_t ts_mask = (1 << scs->num_ts) -1;
+	//printf("num_ts=%u, ts_mask=0x%x, scs_ts_mask=0x%x\n", scs->num_ts, ts_mask, scs->ts_mask);
+	if (scs->ts_mask == ts_mask) {
 		handle_sc_out(scs);
+	}
 }
 
 
-static void handle_data(struct osmo_e1cap_pkthdr *pkt, const uint8_t *data, int len)
+static void handle_data(struct osmo_e1cap_pkthdr *pkt, uint8_t *data, int len)
 {
+	flip_buf_bits(data, len);
+#if 0
+	/* filter out all-ff/all-fe/all-7f */
+	if (all_bytes_are(0xff, data, len) ||
+	    all_bytes_are(0x7f, data, len) ||
+	    all_bytes_are(0x7e, data, len) ||
+	    all_bytes_are(0xe7, data, len) ||
+	    all_bytes_are(0x3f, data, len) ||
+	    all_bytes_are(0xf3, data, len) ||
+	    all_bytes_are(0x9f, data, len) ||
+	    all_bytes_are(0xf9, data, len) ||
+	    all_bytes_are(0xcf, data, len) ||
+	    all_bytes_are(0xfc, data, len) ||
+	    all_bytes_are(0xfe, data, len))
+		return;
+#endif
+
 	switch (g_mode) {
 	case MODE_PRINT:
 		printf("%s %02u/%02u %u (%u): %s\n",
@@ -127,6 +170,7 @@ static int subch_demux_out_cb(struct subch_demux *dmx, int ch, uint8_t *data,
 			      int len, void *c)
 {
 	OSMO_ASSERT(ch == g_filter_subslot);
+
 	handle_data(g_last_pkthdr, data, len);
 
 	return 0;
@@ -175,6 +219,9 @@ int main(int argc, char **argv)
 	printf("sizeof(timeval) = %zu\n", sizeof(struct timeval));
 	printf("sizeof(osmo_e1cap_pkthdr) = %zu\n", sizeof(*pkt));
 
+	memset(g_sc_state, 0, sizeof(g_sc_state));
+	init_flip_bits();
+
 	handle_options(argc, argv);
 
 	if (optind >= argc) {
@@ -193,6 +240,8 @@ int main(int argc, char **argv)
 		subch_demux_init(&smux);
 		subch_demux_activate(&smux, g_filter_subslot);
 	}
+
+//	printf("hdlc=%s\n", osmo_hexdump(&g_sc_state[0].hdlc, sizeof(g_sc_state[0].hdlc)));
 
 	while ((pkt = osmo_e1cap_read_next(f))) {
 		num_pkt++;
