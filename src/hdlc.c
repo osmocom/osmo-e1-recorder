@@ -35,10 +35,13 @@ static int append_bit_out(struct hdlc_proc *hdlc, uint8_t bit)
 	hdlc->num_bits++;
 
 	if (hdlc->num_bits == 8) {
-		hdlc->num_bits = 0;
 		pbit_t out;
+		hdlc->num_bits = 0;
 		/* generate one output byte */
 		osmo_ubit2pbit_ext(&out, 0, hdlc->next_outbyte, 0, 8, 0);
+		/* append to output buffer */
+		OSMO_ASSERT(hdlc->out.len < sizeof(hdlc->out.buf));
+		hdlc->out.buf[hdlc->out.len++] = out;
 		return out;
 	}
 
@@ -58,6 +61,14 @@ static int process_hdlc_bit(struct hdlc_proc *hdlc, uint8_t bit)
 		hdlc->num_bits = 0;
 		DEBUGP("S ");
 		flag = 1;
+		if (hdlc->out.len) {
+			/* call output function if any frame was
+			 * received before the flag octet */
+			if (hdlc->out_cb)
+				hdlc->out_cb(hdlc->out.buf, hdlc->out.len,
+					     hdlc->priv);
+			hdlc->out.len = 0;
+		}
 	} else if (!memcmp(five_ones_zero, hdlc->history, sizeof(five_ones_zero))) {
 		/* 4.3.1 Synchronous transmission: receiver shall
 		 * discard any "0" bit after five contiguous ones */
@@ -78,16 +89,16 @@ static int process_hdlc_bit(struct hdlc_proc *hdlc, uint8_t bit)
 		return out;
 }
 
-int process_raw_hdlc(struct hdlc_proc *hdlc, uint8_t *data, unsigned int len)
+int process_raw_hdlc(struct hdlc_proc *hdlc, ubit_t *bits, unsigned int len)
 {
 	unsigned int i;
 	int out;
 	static int last_out;
 
-	DEBUGP("process_raw_hdlc(%s)\n", osmo_hexdump(data,len));
+	DEBUGP("process_raw_hdlc(%s)\n", osmo_hexdump(bits, len));
 
 	for (i = 0; i < len; i ++) {
-		out = process_hdlc_bit(hdlc, data[i]);
+		out = process_hdlc_bit(hdlc, bits[i]);
 		if (out == -123) {
 			/* suppress repeating Flag characters */
 			if (last_out != out)
