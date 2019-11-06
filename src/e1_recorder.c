@@ -31,12 +31,40 @@ static enum osmo_e1cap_capture_mode ts2cap_mode(struct e1inp_ts *ts)
 	}
 }
 
+static int sig_inp_cbfn(unsigned int subsys, unsigned int signal, void *handler_data, void *signal_data)
+{
+	struct input_signal_data *isd = signal_data;
+	struct e1_recorder_line *rline;
+
+	OSMO_ASSERT(subsys == SS_L_INPUT);
+	OSMO_ASSERT(isd->line && isd->line->num < ARRAY_SIZE(g_recorder.line));
+
+	switch (signal) {
+	case S_L_INP_LINE_ALARM:
+		LOGP(DMAIN, LOGL_NOTICE, "Line %u: ALARM\n", isd->line->num);
+		rline = &g_recorder.line[isd->line->num];
+		rline->has_alarm = true;
+		break;
+	case S_L_INP_LINE_NOALARM:
+		LOGP(DMAIN, LOGL_NOTICE, "Line %u: NOALARM\n", isd->line->num);
+		rline = &g_recorder.line[isd->line->num];
+		rline->has_alarm = false;
+		break;
+	}
+	return 0;
+}
+
 /* receive a raw message frome the E1 timeslot */
 void e1ts_raw_recv(struct e1inp_ts *ts, struct msgb *msg)
 {
 	struct e1_recorder_line *rline = &g_recorder.line[ts->line->num];
 	enum osmo_e1cap_capture_mode cap_mode = ts2cap_mode(ts);
 	int rc;
+
+	if (rline->has_alarm) {
+		DEBUGP(DMAIN, "Skipping storage as line %u is in ALARM\n", ts->line->num);
+		return;
+	}
 
 	/* FIXME: special processing of TFP and PGSL */
 
@@ -169,6 +197,8 @@ int main(int argc, char **argv)
 	signal(SIGUSR1, &signal_handler);
 
 	handle_options(argc, argv);
+
+	osmo_signal_register_handler(SS_L_INPUT, sig_inp_cbfn, NULL);
 
 	rc = vty_read_config_file(g_config_file, NULL);
 	if (rc < 0) {
