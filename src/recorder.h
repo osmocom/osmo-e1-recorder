@@ -17,6 +17,7 @@ enum rec_vty_node {
 };
 
 struct e1_recorder_line {
+	bool has_alarm;
 	struct {
 		bool enabled;
 		uint8_t line_nr;
