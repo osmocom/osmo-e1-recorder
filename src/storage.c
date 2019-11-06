@@ -66,6 +66,7 @@ static int storage_reopen_if_needed(void)
 int e1frame_store(struct e1inp_ts *ts, struct msgb *msg, enum osmo_e1cap_capture_mode mode)
 {
 	struct osmo_e1cap_pkthdr _h, *h = &_h;
+	struct timeval tv;
 	int rc;
 	struct iovec iov[2] = {
 		{
@@ -78,7 +79,8 @@ int e1frame_store(struct e1inp_ts *ts, struct msgb *msg, enum osmo_e1cap_capture
 	};
 
 	h->len = htonl(msg->len);
-	gettimeofday(&h->ts, NULL);
+	tv = h->ts;
+	gettimeofday(&tv, NULL);
 	h->line_nr = ts->line->num;
 	h->ts_nr = ts->num;
 	h->capture_mode = mode;
