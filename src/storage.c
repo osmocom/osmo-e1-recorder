@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/uio.h>
 
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/talloc.h>
