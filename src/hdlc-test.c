@@ -12,12 +12,11 @@ static void hdlc_process_hex_str(struct hdlc_proc *hdlc, const char *hex)
 	int string_len = strlen(hex);
 	int byte_len = string_len/2;
 	int bit_len = byte_len*8;
-	int rc;
 
 	printf("hex string   = %s\n", hex);
 	bytes = alloca(byte_len);
 	bits = alloca(bit_len);
-	rc = osmo_hexparse(hex, bytes, byte_len);
+	osmo_hexparse(hex, bytes, byte_len);
 	printf("parsed bytes = %s\n", osmo_hexdump(bytes, byte_len));
 
 	printf("MSB mode\n");

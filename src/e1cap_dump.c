@@ -53,7 +53,7 @@ static char *timeval2str(struct timeval *tv)
 	time_t nowtime;
 	struct tm *nowtm;
 	char tmbuf[64];
-	static char buf[64];
+	static char buf[64+20];
 
 	nowtime = tv->tv_sec;
 	nowtm = localtime(&nowtime);
@@ -62,6 +62,7 @@ static char *timeval2str(struct timeval *tv)
 	return buf;
 }
 
+#if 0
 static int all_bytes_are(unsigned char ch, const uint8_t *data, int len)
 {
 	int i;
@@ -72,6 +73,7 @@ static int all_bytes_are(unsigned char ch, const uint8_t *data, int len)
 	}
 	return 1;
 }
+#endif
 
 static void handle_hdlc_frame_content(const uint8_t *data, unsigned int len,
 				      void *priv)
@@ -151,6 +153,8 @@ static void handle_sc_in(struct osmo_e1cap_pkthdr *pkt, const uint8_t *data, uns
 
 static void handle_data(struct osmo_e1cap_pkthdr *pkt, uint8_t *data, int len)
 {
+	struct timeval tv;
+
 	flip_buf_bits(data, len);
 #if 0
 	/* filter out all-ff/all-fe/all-7f */
@@ -170,8 +174,10 @@ static void handle_data(struct osmo_e1cap_pkthdr *pkt, uint8_t *data, int len)
 
 	switch (g_mode) {
 	case MODE_PRINT:
+		tv.tv_sec = pkt->ts.tv_sec;
+		tv.tv_usec = pkt->ts.tv_usec;
 		printf("%s %02u/%02u %u (%u): %s\n",
-			timeval2str(&pkt->ts),
+			timeval2str(&tv),
 			pkt->line_nr, pkt->ts_nr, pkt->capture_mode,
 			pkt->len,
 			osmo_hexdump_nospc(data, len));
