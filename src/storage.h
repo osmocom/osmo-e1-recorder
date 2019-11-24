@@ -11,7 +11,10 @@ enum osmo_e1cap_capture_mode {
 /* header for each frame we store */
 struct osmo_e1cap_pkthdr {
 	/* Timestamp at which frame was received */
-	struct timeval ts;
+	struct {
+		uint32_t tv_sec;
+		uint32_t tv_usec;
+	} ts;
 	/* length of frame data after this header */
 	uint32_t len;
 	/* line/span number on which frame was received */
