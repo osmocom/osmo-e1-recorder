@@ -78,7 +78,7 @@ static int all_bytes_are(unsigned char ch, const uint8_t *data, int len)
 static void handle_hdlc_frame_content(const uint8_t *data, unsigned int len,
 				      void *priv)
 {
-	if (g_pcap_fd && len >= 4) {
+	if (g_pcap_fd >= 0 && len >= 4) {
 		uint8_t *cur = msgb_put(g_pcap_msg, len-2);
 		memcpy(cur, data, len-2);
 		printf("==> %s\n", msgb_hexdump(g_pcap_msg));
