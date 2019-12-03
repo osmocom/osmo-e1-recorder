@@ -15,6 +15,8 @@
 #include "storage.h"
 #include "recorder.h"
 
+#include "config.h"
+
 static enum osmo_e1cap_capture_mode ts2cap_mode(struct e1inp_ts *ts)
 {
 	switch (ts->type) {
@@ -84,8 +86,8 @@ static struct log_info info = {
 
 struct vty_app_info vty_info = {
 	.name = "osmo-e1-recorder",
-	.version = "0",
-	.copyright = "(C) 2016 by Harald Welte <laforge@gnumonks.org>\n",
+	.version = PACKAGE_VERSION,
+	.copyright = "(C) 2016-2019 by Harald Welte <laforge@gnumonks.org>\n",
 };
 
 static void *rec_tall_ctx;
@@ -104,16 +106,26 @@ static void signal_handler(int signo)
 	}
 }
 
+static void print_help(void)
+{
+	printf( "  -h --help		This help\n"
+		"  -V --version		Print version of the program\n"
+		"  -c --config FILE	Specify configuration file\n"
+		);
+}
+
 static void handle_options(int argc, char **argv)
 {
 	while (1) {
 		int option_index = 0, c;
 		static const struct option long_options[] = {
 			{ "config-file", 1, 0, 'c' },
+			{ "help", 0, 0, 'h' },
+			{ "version", 0, 0, 'V' },
 			{ 0, 0, 0, 0 }
 		};
 
-		c = getopt_long(argc, argv, "c:",
+		c = getopt_long(argc, argv, "c:hV",
 				long_options, &option_index);
 		if (c == -1)
 			break;
@@ -121,6 +133,14 @@ static void handle_options(int argc, char **argv)
 		switch (c) {
 		case 'c':
 			g_config_file = optarg;
+			break;
+		case 'h':
+			print_help();
+			exit(0);
+			break;
+		case 'V':
+			print_version(1);
+			exit(0);
 			break;
 		}
 	}
