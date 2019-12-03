@@ -275,6 +275,11 @@ int main(int argc, char **argv)
 		exit(2);
 	}
 
+	if (argc > optind+1) {
+		fprintf(stderr, "Unsupported positional arguments on command line\n");
+		exit(2);
+	}
+
 	f = osmo_e1cap_open(NULL, argv[optind++]);
 	if (!f) {
 		fprintf(stderr, "Unable to open input file\n");
