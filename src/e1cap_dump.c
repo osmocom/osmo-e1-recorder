@@ -19,6 +19,8 @@
 #include "flip_bits.h"
 #include "hdlc.h"
 
+#include "config.h"
+
 struct e1_recorder g_recorder;
 
 enum mode {
@@ -201,12 +203,32 @@ static int subch_demux_out_cb(struct subch_demux *dmx, int ch, uint8_t *data,
 	return 0;
 }
 
+static void print_help(void)
+{
+	printf(	"  -h 			Print this message\n"
+		"  -V			Print version of the program\n"
+		"  -l LINE_NR		Filter on line number\n"
+		"  -s SLOT_NR		Filter on timeslot number\n"
+		"  -b			Raw binary output mode (for piping stdout)\n"
+		"  -S			Super-Channel mode\n"
+		"  -u SUBSLOT_NR		Filter on 16k sub-slot number\n"
+		"  -p PCAP_FILE		Write LAPD PCAP file\n"
+	      );
+};
+
 static int handle_options(int argc, char **argv)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "l:s:bSu:p:")) != -1) {
+	while ((opt = getopt(argc, argv, "hVl:s:bSu:p:")) != -1) {
 		switch (opt) {
+		case 'h':
+			print_help();
+			exit(0);
+		case 'V':
+			printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
+			exit(0);
+			break;
 		case 'l': /* Filter on E1 Line Number */
 			g_filter_line = atoi(optarg);
 			break;
