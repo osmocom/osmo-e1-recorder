@@ -170,6 +170,9 @@ static void config_write_recorder_line(struct vty *vty, unsigned int lnr)
 		struct e1inp_ts *ts = &line->ts[i];
 		const char *mode_str;
 
+		if (ts->type == E1INP_TS_TYPE_NONE)
+			continue;
+
 		mode_str = get_value_string(e1inp_ts_type_names, ts->type);
 
 		vty_out(vty, " line %u ts %u mode %s%s",
