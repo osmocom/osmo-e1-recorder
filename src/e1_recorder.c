@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <getopt.h>
+#include <errno.h>
 
 #include <osmocom/core/signal.h>
 #include <osmocom/core/logging.h>
@@ -150,8 +151,11 @@ int main(int argc, char **argv)
 	handle_options(argc, argv);
 
 	rc = vty_read_config_file(g_config_file, NULL);
-	if (rc < 0)
+	if (rc < 0) {
+		fprintf(stderr, "Cannot parse configuration file '%s': %s\n", g_config_file,
+			strerror(errno));
 		exit(1);
+	}
 
 	/* start telne tafte reading config for vty_get_bind_adr() */
 	telnet_init_dynif(rec_tall_ctx, NULL, vty_get_bind_addr(), 4444);
