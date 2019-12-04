@@ -1,0 +1,68 @@
+osmo-e1-recorder> show e1_line
+E1 Line Number 0, Name , Driver dahdi
+DAHDI Span 1 non-existant
+E1 Line Number 1, Name , Driver dahdi
+DAHDI Span 2 non-existant
+osmo-e1-recorder> show e1_timeslot
+E1 Timeslot  1 of Line 0 is Type RAW
+E1 Timeslot  2 of Line 0 is Type RAW
+E1 Timeslot  3 of Line 0 is Type RAW
+E1 Timeslot  4 of Line 0 is Type RAW
+E1 Timeslot  5 of Line 0 is Type RAW
+E1 Timeslot  6 of Line 0 is Type RAW
+E1 Timeslot  7 of Line 0 is Type RAW
+E1 Timeslot  8 of Line 0 is Type RAW
+E1 Timeslot  9 of Line 0 is Type RAW
+E1 Timeslot 10 of Line 0 is Type RAW
+E1 Timeslot 11 of Line 0 is Type RAW
+E1 Timeslot 12 of Line 0 is Type RAW
+E1 Timeslot 13 of Line 0 is Type RAW
+E1 Timeslot 14 of Line 0 is Type RAW
+E1 Timeslot 15 of Line 0 is Type RAW
+E1 Timeslot 16 of Line 0 is Type RAW
+E1 Timeslot 17 of Line 0 is Type RAW
+E1 Timeslot 18 of Line 0 is Type RAW
+E1 Timeslot 19 of Line 0 is Type RAW
+E1 Timeslot 20 of Line 0 is Type RAW
+E1 Timeslot 21 of Line 0 is Type RAW
+E1 Timeslot 22 of Line 0 is Type RAW
+E1 Timeslot 23 of Line 0 is Type RAW
+E1 Timeslot  1 of Line 1 is Type RAW
+E1 Timeslot  2 of Line 1 is Type RAW
+E1 Timeslot  3 of Line 1 is Type RAW
+E1 Timeslot  4 of Line 1 is Type RAW
+E1 Timeslot  5 of Line 1 is Type RAW
+E1 Timeslot  6 of Line 1 is Type RAW
+E1 Timeslot  7 of Line 1 is Type RAW
+E1 Timeslot  8 of Line 1 is Type RAW
+E1 Timeslot  9 of Line 1 is Type RAW
+E1 Timeslot 10 of Line 1 is Type RAW
+E1 Timeslot 11 of Line 1 is Type RAW
+E1 Timeslot 12 of Line 1 is Type RAW
+E1 Timeslot 13 of Line 1 is Type RAW
+E1 Timeslot 14 of Line 1 is Type RAW
+E1 Timeslot 15 of Line 1 is Type RAW
+E1 Timeslot 16 of Line 1 is Type RAW
+E1 Timeslot 17 of Line 1 is Type RAW
+E1 Timeslot 18 of Line 1 is Type RAW
+E1 Timeslot 19 of Line 1 is Type RAW
+E1 Timeslot 20 of Line 1 is Type RAW
+E1 Timeslot 21 of Line 1 is Type RAW
+E1 Timeslot 22 of Line 1 is Type RAW
+E1 Timeslot 23 of Line 1 is Type RAW
+osmo-e1-recorder> enable
+osmo-e1-recorder# configure terminal
+osmo-e1-recorder(config)# list
+...
+  e1_input
+  recorder
+...
+osmo-e1-recorder(config)# recorder
+osmo-e1-recorder(config-recorder)# list
+...
+  line <0-255> ts <1-31> mode (none|hdlc|trau|raw)
+  line <0-255> mirror <0-255>
+  no line <0-255> mirror
+  storage-path PATH
+  file-size-mb <1-9999999>
+...
