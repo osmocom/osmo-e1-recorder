@@ -288,7 +288,7 @@ int main(int argc, char **argv)
 		g_sc_state[i].hdlc.out_cb = handle_hdlc_frame_content;
 	init_flip_bits();
 
-	osmo_init_logging(&log_info);
+	osmo_init_logging2(NULL, &log_info);
 
 	handle_options(argc, argv);
 
