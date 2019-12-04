@@ -176,7 +176,7 @@ static void config_write_recorder_line(struct vty *vty, unsigned int lnr)
 		mode_str = get_value_string(e1inp_ts_type_names, ts->type);
 
 		vty_out(vty, " line %u ts %u mode %s%s",
-			lnr, ts->num, mode_str, VTY_NEWLINE);
+			lnr, ts->num, osmo_str_tolower(mode_str), VTY_NEWLINE);
 	}
 }
 
