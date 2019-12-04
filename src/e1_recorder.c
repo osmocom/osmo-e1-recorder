@@ -157,7 +157,7 @@ int main(int argc, char **argv)
 
 	rec_tall_ctx = talloc_named_const(NULL, 0, "recorder");
 
-	osmo_init_logging(&info);
+	osmo_init_logging2(rec_tall_ctx, &info);
 	vty_init(&vty_info);
 	logging_vty_add_cmds(&info);
 	osmo_signal_register_handler(SS_L_INPUT, inp_sig_cb, NULL);
