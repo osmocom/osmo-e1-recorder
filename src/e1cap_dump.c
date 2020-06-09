@@ -153,11 +153,12 @@ static void handle_sc_in(struct osmo_e1cap_pkthdr *pkt, const uint8_t *data, uns
 }
 
 
-static void handle_data(struct osmo_e1cap_pkthdr *pkt, uint8_t *data, int len)
+static void handle_data(struct osmo_e1cap_pkthdr *pkt, const uint8_t *idata, int len)
 {
+	uint8_t data[len];
 	struct timeval tv;
 
-	flip_buf_bits(data, len);
+	flip_buf_bits(data, idata, len);
 #if 0
 	/* filter out all-ff/all-fe/all-7f */
 	if (all_bytes_are(0xff, data, len) ||
@@ -193,7 +194,7 @@ static void handle_data(struct osmo_e1cap_pkthdr *pkt, uint8_t *data, int len)
 	}
 }
 
-static int subch_demux_out_cb(struct subch_demux *dmx, int ch, uint8_t *data,
+static int subch_demux_out_cb(struct subch_demux *dmx, int ch, const ubit_t *data,
 			      int len, void *c)
 {
 	OSMO_ASSERT(ch == g_filter_subslot);

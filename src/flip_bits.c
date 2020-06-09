@@ -16,14 +16,13 @@ void init_flip_bits(void)
         }
 }
 
-uint8_t *flip_buf_bits(uint8_t *buf, int len)
+uint8_t *flip_buf_bits(uint8_t *out, const uint8_t *in, int len)
 {
         int i;
-        uint8_t *start = buf;
 
         for (i = 0 ; i < len; i++) {
-                buf[i] = flip_table[(uint8_t)buf[i]];
+                out[i] = flip_table[(uint8_t)in[i]];
         }
 
-        return start;
+        return out;
 }
