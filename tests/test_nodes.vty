@@ -1,8 +1,8 @@
 osmo-e1-recorder> show e1_line
 E1 Line Number 0, Name , Driver dahdi
-DAHDI Span 1 non-existant
+DAHDI Span 1 non-existent
 E1 Line Number 1, Name , Driver dahdi
-DAHDI Span 2 non-existant
+DAHDI Span 2 non-existent
 osmo-e1-recorder> show e1_timeslot
 E1 Timeslot  1 of Line 0 is Type RAW
 E1 Timeslot  2 of Line 0 is Type RAW
