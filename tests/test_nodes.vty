@@ -4,6 +4,7 @@ DAHDI Span 1 non-existent
 E1 Line Number 1, Name , Driver dahdi
 DAHDI Span 2 non-existent
 osmo-e1-recorder> show e1_timeslot
+E1 Timeslot  0 of Line 0 is Type RAW
 E1 Timeslot  1 of Line 0 is Type RAW
 E1 Timeslot  2 of Line 0 is Type RAW
 E1 Timeslot  3 of Line 0 is Type RAW
@@ -26,7 +27,7 @@ E1 Timeslot 19 of Line 0 is Type RAW
 E1 Timeslot 20 of Line 0 is Type RAW
 E1 Timeslot 21 of Line 0 is Type RAW
 E1 Timeslot 22 of Line 0 is Type RAW
-E1 Timeslot 23 of Line 0 is Type RAW
+E1 Timeslot  0 of Line 1 is Type RAW
 E1 Timeslot  1 of Line 1 is Type RAW
 E1 Timeslot  2 of Line 1 is Type RAW
 E1 Timeslot  3 of Line 1 is Type RAW
@@ -49,7 +50,6 @@ E1 Timeslot 19 of Line 1 is Type RAW
 E1 Timeslot 20 of Line 1 is Type RAW
 E1 Timeslot 21 of Line 1 is Type RAW
 E1 Timeslot 22 of Line 1 is Type RAW
-E1 Timeslot 23 of Line 1 is Type RAW
 osmo-e1-recorder> enable
 osmo-e1-recorder# configure terminal
 osmo-e1-recorder(config)# list
