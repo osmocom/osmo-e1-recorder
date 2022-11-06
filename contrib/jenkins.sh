@@ -7,7 +7,7 @@
 #
 
 if ! [ -x "$(command -v osmo-build-dep.sh)" ]; then
-	echo "Error: We need to have scripts/osmo-deps.sh from http://git.osmocom.org/osmo-ci/ in PATH !"
+	echo "Error: We need to have scripts/osmo-deps.sh from https://gitea.osmocom.org/osmocom/osmo-ci in PATH !"
 	exit 2
 fi
 
