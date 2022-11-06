@@ -187,7 +187,7 @@ int main(int argc, char **argv)
 
 	osmo_init_logging2(rec_tall_ctx, &info);
 	vty_init(&vty_info);
-	logging_vty_add_cmds(&info);
+	logging_vty_add_cmds();
 	osmo_signal_register_handler(SS_L_INPUT, inp_sig_cb, NULL);
 	libosmo_abis_init(rec_tall_ctx);
 	e1inp_vty_init();
