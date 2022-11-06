@@ -22,11 +22,12 @@ communication.  Recording of a single E1 link always requires two E1
 interface cards, one for each direction.
 
 Recording can be performed either
-* passively, using a E1 Tap aapter
-* asa proxy / man-in-the-middle
+
+* passively, using a E1 Tap adapter
+* as a proxy / man-in-the-middle
 
 All timeslots will be opened in "raw" mode, making sure the recording
-will work wheter or not there is HLDC-based signalling (MTP or LAPD),
+will work whether or not there is HDLC-based signalling (MTP or LAPD),
 PCM voice, TRAU frames or anything else on the line.
 
 Recording will be done on a per-timeslot basis, dumping the raw bytes
@@ -37,4 +38,4 @@ size limit.  File names contain RTC time stamping and timeslot number.
 
 Later possible extensions could include automatic detection of the
 payload and a more intelligent storage format (e.g. in case of HDLC
-bsaed signalling).
+based signalling).
