@@ -192,4 +192,5 @@ AC_OUTPUT(
     doc/Makefile
     tests/Makefile
     doc/examples/Makefile
+    contrib/osmo-e1-recorder.spec
     Makefile)
