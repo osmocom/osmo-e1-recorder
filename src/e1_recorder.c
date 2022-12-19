@@ -208,7 +208,7 @@ int main(int argc, char **argv)
 	}
 
 	/* start telne tafte reading config for vty_get_bind_adr() */
-	telnet_init_dynif(rec_tall_ctx, NULL, vty_get_bind_addr(), 4444);
+	telnet_init_default(rec_tall_ctx, NULL, 4444);
 
 	while (1) {
 		osmo_select_main(0);
