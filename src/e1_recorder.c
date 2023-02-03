@@ -207,8 +207,12 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	/* start telne tafte reading config for vty_get_bind_adr() */
-	telnet_init_default(rec_tall_ctx, NULL, 4444);
+	/* start telnet after reading config */
+	rc = telnet_init_default(rec_tall_ctx, NULL, 4444);
+	if (rc < 0) {
+		fprintf(stderr, "Cannot open telnet server port: %s\n", strerror(errno));
+		exit(1);
+	}
 
 	while (1) {
 		osmo_select_main(0);
