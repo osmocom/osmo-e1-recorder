@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 app_configs = {
     "osmo-e1-recorder": ["doc/examples/osmo-e1-recorder.cfg"]
