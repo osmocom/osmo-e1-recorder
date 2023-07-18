@@ -77,6 +77,7 @@ void e1ts_raw_recv(struct e1inp_ts *ts, struct msgb *msg)
 	if (rline->mirror.enabled) {
 		struct e1inp_line *other_line =
 				e1inp_line_find(rline->mirror.line_nr);
+		OSMO_ASSERT(other_line);
 		struct e1inp_ts *other_ts;
 		other_ts = &other_line->ts[ts->num-1];
 		if (!other_ts) {
