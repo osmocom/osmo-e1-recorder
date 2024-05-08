@@ -15,7 +15,7 @@ SUBDIRS = \
 	$(NULL)
 
 BUILT_SOURCES = $(top_srcdir)/.version
-EXTRA_DIST = git-version-gen osmoappdesc.py .version contrib/osmo-e1-recorder.spec.in
+EXTRA_DIST = git-version-gen osmoappdesc.py .version
 
 AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
