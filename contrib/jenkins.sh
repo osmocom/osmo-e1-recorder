@@ -31,6 +31,7 @@ export PKG_CONFIG_PATH="$inst/lib/pkgconfig:$PKG_CONFIG_PATH"
 export LD_LIBRARY_PATH="$inst/lib"
 export PATH="$inst/bin:$PATH"
 
+osmo-build-dep.sh libosmo-netif "" --disable-doxygen
 osmo-build-dep.sh libosmo-abis
 
 # Additional configure options and depends
